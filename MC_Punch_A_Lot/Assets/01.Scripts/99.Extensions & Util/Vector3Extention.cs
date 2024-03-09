@@ -15,7 +15,7 @@ public static class Vector3Extention
     {
         Vector3 retVal = new();
 
-        if(_negativeValues)
+        if (_negativeValues)
         {
             retVal.x = Random.Range(-_valueLimit, _valueLimit);
             retVal.y = Random.Range(-_valueLimit, _valueLimit);
@@ -28,18 +28,26 @@ public static class Vector3Extention
             retVal.z = Random.Range(0f, _valueLimit);
         }
 
-        switch(_removeAxis)
+        switch (_removeAxis)
         {
             case Axis.X:
-            retVal.x = 0f;
-            break;
+                retVal.x = 0f;
+                break;
             case Axis.Y:
-            retVal.y = 0f;
-            break;
+                retVal.y = 0f;
+                break;
             case Axis.Z:
-            retVal.z = 0f;
-            break;
+                retVal.z = 0f;
+                break;
         }
+
+        return retVal;
+    }
+
+    //DEBUG used for a few tests
+    public static Vector3 AddScalar(Vector3 _v, float _scalar)
+    {
+        Vector3 retVal = new Vector3(_v.x + _scalar, _v.y + _scalar, _v.z + _scalar);
 
         return retVal;
     }
