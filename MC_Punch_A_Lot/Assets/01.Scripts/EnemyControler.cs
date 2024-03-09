@@ -14,12 +14,14 @@ public class EnemyControler : MonoBehaviour
 
     [Header("Colliders")]
     [SerializeField] Collider interactionTrigger;
-    [SerializeField] Collider masterCollider;
 
     [Header("Ragdoll References")]
     [SerializeField] Transform hipTransform;
     [SerializeField] Rigidbody masterBone;
     [SerializeField] Rigidbody[] bodyBones;
+
+    [Header("Money Spawn Reference")]
+    [SerializeField] GameObject moneyPrefab;
 
 
 
@@ -45,20 +47,39 @@ public class EnemyControler : MonoBehaviour
 
     private void Update()
     {
-        //TODO make a state machine to set up the enemy movement
 
         if (State == EnemyState.ALIVE && agent.enabled)
         {
             if (agent.remainingDistance < m_allowedRemainingDistance)
             {
-                Debug.Log("Changed target");
                 agent.SetDestination(Vector3Extention.RandomVec3(m_maxTravelDistance, true, Axis.Y));
+            }
+        }
+        else if (State == EnemyState.DEAD)
+        {
+            RaycastHit hit;
+            Debug.DrawLine(masterBone.transform.position, masterBone.transform.position + Vector3.down, Color.blue);
+            if (Physics.Raycast(masterBone.transform.position, Vector3.down, out hit, 0.5f))
+            {
+                if (hit.transform.CompareTag(Tags.GROUND))
+                    interactionTrigger.enabled = true;
+                if (hit.transform.CompareTag(Tags.DROP_BOX))
+                {
+                    GameObject go = Instantiate(
+                        moneyPrefab,
+                        Vector3Extention.AddScalar_OnAxis(hit.transform.position, 1f, Axis.Y),
+                        Quaternion.identity);
+                    go.GetComponent<MoneyBehaviour>().Spawn(transform.position);
+                    StartCoroutine(Wait_For_Respawn());
+                }
             }
         }
     }
 
     public void Get_Spawned()
     {
+        interactionTrigger.enabled = true;
+        transform.position = Vector3Extention.RandomVec3(m_maxTravelDistance, true, Axis.Y);
         agent.enabled = true;
         enemyAnimator.enabled = true;
         Set_Radgoll_State(false);
@@ -77,6 +98,14 @@ public class EnemyControler : MonoBehaviour
         StartCoroutine(Switch_State(EnemyState.DEAD));
     }
 
+    public void Get_Thrown(Vector3 _velocity)
+    {
+        Set_Radgoll_State(true);
+        masterBone.AddForce(_velocity * -MathConstants.g, ForceMode.VelocityChange);
+        Debug.DrawLine(masterBone.position, masterBone.position + _velocity, Color.green, 10f);
+        transform.SetParent(null);
+    }
+
     IEnumerator Switch_State(EnemyState _nextState)
     {
         //Generaly used to let the physics calculations cool down on the limbs
@@ -89,8 +118,7 @@ public class EnemyControler : MonoBehaviour
     {
         Set_Radgoll_State(false);
         masterBone.transform.localPosition = Vector3.zero;
-        masterCollider.enabled = false;
-        transform.rotation = Quaternion.identity;   //TEST
+        transform.rotation = Quaternion.identity;
     }
 
     private void Set_Radgoll_State(bool _state)
@@ -113,16 +141,13 @@ public class EnemyControler : MonoBehaviour
         ShutDown_Interation();
     }
 
-
-    private void OnTriggerEnter(Collider _other)
+    IEnumerator Wait_For_Respawn()
     {
-        if (_other.CompareTag(Tags.DROP_BOX))
-            Debug.Log("<b>MONEEEEEY!!</b>");
-    }
+        Set_Radgoll_State(false);
+        transform.position = Vector3.down * 10f;
 
-    private void OnCollisionEnter(Collision _other)
-    {
-        if (_other.transform.CompareTag(Tags.GROUND))
-            interactionTrigger.enabled = true;
+        yield return new WaitForSeconds(1f);
+
+        Get_Spawned();
     }
 }

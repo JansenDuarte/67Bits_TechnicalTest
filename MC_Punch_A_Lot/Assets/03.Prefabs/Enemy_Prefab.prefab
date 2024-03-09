@@ -47,12 +47,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_maxTravelDistance: 10
-  m_allowedRemainingDistance: 0
+  m_allowedRemainingDistance: 1
   m_punchForce: 50
   agent: {fileID: 2939384288002056628}
   enemyAnimator: {fileID: 1666974315830340865}
   interactionTrigger: {fileID: 8069181233759242988}
-  masterCollider: {fileID: 7208098455572727124}
   hipTransform: {fileID: 9102506441576768253}
   masterBone: {fileID: 0}
   bodyBones:
@@ -66,6 +65,7 @@ MonoBehaviour:
   - {fileID: 4444623254486182337}
   - {fileID: 1596876506259100303}
   - {fileID: 7263121877756880208}
+  moneyPrefab: {fileID: 6814768504104370210, guid: 3d76600193900204795a204d9c8b22ed, type: 3}
 --- !u!195 &2939384288002056628
 NavMeshAgent:
   m_ObjectHideFlags: 0

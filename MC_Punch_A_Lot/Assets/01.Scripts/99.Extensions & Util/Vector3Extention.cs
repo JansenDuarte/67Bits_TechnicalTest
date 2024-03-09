@@ -51,6 +51,25 @@ public static class Vector3Extention
 
         return retVal;
     }
+
+    public static Vector3 AddScalar_OnAxis(Vector3 _v, float _scalar, Axis _axis)
+    {
+        Vector3 retVal = new Vector3(_v.x, _v.y, _v.z);
+        switch (_axis)
+        {
+            case Axis.X:
+                retVal.x += _scalar;
+                break;
+            case Axis.Y:
+                retVal.y += _scalar;
+                break;
+            case Axis.Z:
+                retVal.z += _scalar;
+                break;
+        }
+
+        return retVal;
+    }
 }
 
 public enum Axis

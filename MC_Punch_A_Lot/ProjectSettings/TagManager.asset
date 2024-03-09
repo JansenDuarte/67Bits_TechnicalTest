@@ -8,6 +8,7 @@ TagManager:
   - Money
   - Dropbox
   - Ground
+  - LevelUp
   layers:
   - Default
   - TransparentFX

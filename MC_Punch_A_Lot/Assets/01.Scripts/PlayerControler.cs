@@ -1,3 +1,5 @@
+using System;
+using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,27 +9,36 @@ public class PlayerControler : MonoBehaviour
 {
     [Header("Player Metrics")]
     [SerializeField] Rigidbody m_rigidbody;
-    [SerializeField][Range(1f, 20f)] float m_movementSpeed;
-    [SerializeField][Range(1f, 20f)] float m_rotationSpeed;
+    [SerializeField, Range(1f, 20f)] float m_movementSpeed;
+    [SerializeField, Range(1f, 20f)] float m_rotationSpeed;
     [SerializeField] int m_pileLimit = 1;
     [SerializeField] int m_pileIncrease = 1;
     [SerializeField] float m_pileLinearVariation;
     [SerializeField] float m_pileAngularVariation;
     [SerializeField] float m_pileHightVariation;
 
+    [SerializeField] float m_throwDelay;
+
+    public int money = 0;
+
     [Header("Aditional References")]
     [SerializeField] Camera mainCamera;
     [SerializeField] Animator playerAnimator;
     [SerializeField] Transform pileBase;
+    [SerializeField] SkinnedMeshRenderer m_renderer;
 
 
     Vector3 m_cameraInitialPos;
     Vector3 m_playerMovement;
     int m_currentPileSize = 0;
 
+    int m_level = 1;
+
     List<Vector3> m_pilePositions = new List<Vector3>();
     List<Vector3> m_pileRotations = new List<Vector3>();
-    List<Transform> m_pileItems = new List<Transform>();
+    List<EnemyControler> m_pileItems = new List<EnemyControler>();
+
+    Coroutine co_throw = null;
 
 
 
@@ -98,12 +109,16 @@ public class PlayerControler : MonoBehaviour
 
     private void Level_Up()
     {
-        //TODO increase level, change color and increase number of bodies you can carry
+        m_level++;
+        m_pileLimit += m_pileIncrease;
+
         for (int i = 0; i < m_pileIncrease; i++)
         {
             m_pilePositions.Add(new Vector3());
             m_pileRotations.Add(new Vector3());
         }
+        Color newColor = Color.HSVToRGB((m_level / 10f) % 1f, 1f, 1f);
+        m_renderer.material.color = newColor;
     }
 
 
@@ -121,7 +136,7 @@ public class PlayerControler : MonoBehaviour
         _enemy.Get_Collected();
         _enemy.transform.SetParent(pileBase);
 
-        m_pileItems.Add(_enemy.transform);
+        m_pileItems.Add(_enemy);
         m_currentPileSize++;
     }
 
@@ -129,7 +144,6 @@ public class PlayerControler : MonoBehaviour
 
     private void OnTriggerEnter(Collider _other)
     {
-        //TODO make the different collisions with the objects and enemies
         if (_other.CompareTag(Tags.ENEMY))
         {
             EnemyControler ec = _other.GetComponentInParent<EnemyControler>();
@@ -138,15 +152,62 @@ public class PlayerControler : MonoBehaviour
             if (ec.State == EnemyState.ALIVE)
                 ec.Get_Punched(Vector3.Normalize(ec.transform.position - transform.position));
         }
+
+        if (_other.CompareTag(Tags.DROP_BOX))
+        {
+            co_throw = StartCoroutine(Throw_Bodies(_other.transform.position));
+        }
+
+        if (_other.CompareTag(Tags.MONEY))
+        {
+            MoneyBehaviour mb = _other.GetComponentInParent<MoneyBehaviour>();
+            money += (int)mb.Collect();
+        }
+
+        if(_other.CompareTag(Tags.LEVELUP))
+        {
+            //TODO make the calculation or the necessary money to levelup
+        }
     }
 
+    private void OnTriggerExit(Collider _other)
+    {
+        if (_other.CompareTag(Tags.DROP_BOX))
+        {
+            if (co_throw != null)
+                StopCoroutine(co_throw);
+        }
+    }
+
+    IEnumerator Throw_Bodies(Vector3 _boxPosition)
+    {
+        while (m_pileItems.ElementAtOrDefault(m_pileItems.Count - 1) != null)
+        {
+            EnemyControler ec = m_pileItems[m_pileItems.Count - 1];
+            Vector3 deltaPos = _boxPosition - ec.transform.position;
+
+            Vector3 velocity = Vector3.zero;
+            velocity.x = deltaPos.x * MathConstants.COS_60;
+            velocity.z = deltaPos.z * MathConstants.COS_60;
+            velocity.y = (deltaPos.y - MathConstants.g / 2f) / MathConstants.SIN_60;
+
+            ec.Get_Thrown(velocity);
+            m_pileItems.Remove(ec);
+            m_currentPileSize--;
+
+            yield return new WaitForSeconds(m_throwDelay);
+        }
+
+        co_throw = null;
+        yield break;
+    }
 
 
     private void InitialSetup()
     {
         m_cameraInitialPos = mainCamera.transform.localPosition;
 
-        for (int i = 0; i < m_pileLimit; i++)
+        for (int i = 0; i < m_pileLimit + 1; i++)
         {
             m_pilePositions.Add(new Vector3());
             m_pileRotations.Add(new Vector3());
@@ -188,6 +249,8 @@ public class PlayerControler : MonoBehaviour
 
             Relocate_Pile_Items();
 
+            Check_Falling_Bodies();
+
             yield return new WaitForEndOfFrame();
         }
     }
@@ -201,9 +264,9 @@ public class PlayerControler : MonoBehaviour
         {
             if (m_pileItems[i] != null)
             {
-                m_pileItems[i].localPosition = m_pilePositions[i];
+                m_pileItems[i].transform.localPosition = m_pilePositions[i];
                 rotationHelper.eulerAngles = m_pileRotations[i];
-                m_pileItems[i].SetLocalPositionAndRotation(m_pilePositions[i], rotationHelper);
+                m_pileItems[i].transform.SetLocalPositionAndRotation(m_pilePositions[i], rotationHelper);
             }
         }
     }
@@ -224,11 +287,17 @@ public class PlayerControler : MonoBehaviour
     {
         for (int i = 0; i < m_pileRotations.Count; i++)
         {
-            m_pileRotations[i] = (pileBase.localPosition - m_playerMovement) * (i / m_pileAngularVariation);
+            //This makes a cool pile, but it's not perfect
             Vector3 v = m_pileRotations[i];
-            v.y = i / m_pileHightVariation;
+            v.y = m_playerMovement.x * m_pileAngularVariation * i;
+            v.x = -(m_playerMovement.z * m_pileAngularVariation * i);  //if I flip the sign, it looks like a liquid
             m_pileRotations[i] = v;
         }
+    }
+
+    private void Check_Falling_Bodies()
+    {
+        //TODO duh!
     }
 
 }

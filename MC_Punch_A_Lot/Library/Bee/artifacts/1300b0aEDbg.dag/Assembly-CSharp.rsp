@@ -367,10 +367,12 @@
 -analyzer:"D:/Unity_Editors/2023.1.15f1/Editor/Data/Tools/Unity.SourceGenerators/Unity.Properties.SourceGenerator.dll"
 -analyzer:"D:/Unity_Editors/2023.1.15f1/Editor/Data/Tools/Unity.SourceGenerators/Unity.SourceGenerators.dll"
 "Assets/01.Scripts/99.Extensions & Util/EnemyState.cs"
+"Assets/01.Scripts/99.Extensions & Util/MathConstants.cs"
 "Assets/01.Scripts/99.Extensions & Util/Tags.cs"
 "Assets/01.Scripts/99.Extensions & Util/Vector3Extention.cs"
 "Assets/01.Scripts/EnemyControler.cs"
 "Assets/01.Scripts/GameManager.cs"
+"Assets/01.Scripts/MoneyBehaviour.cs"
 "Assets/01.Scripts/PlayerControler.cs"
 -langversion:9.0
 

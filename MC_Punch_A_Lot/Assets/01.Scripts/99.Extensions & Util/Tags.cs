@@ -9,4 +9,5 @@ public readonly struct Tags
     public static readonly string MONEY = "Money";
     public static readonly string DROP_BOX = "Dropbox";
     public static readonly string GROUND = "Ground";
+    public static readonly string LEVELUP = "LevelUp";
 }
