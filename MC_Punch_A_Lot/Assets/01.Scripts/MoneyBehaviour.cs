@@ -31,6 +31,7 @@ public class MoneyBehaviour : MonoBehaviour
 
     public uint Collect()
     {
+        m_collectParticles.Play();
         StartCoroutine(De_Spawn());
         return moneyValue;
     }
@@ -41,13 +42,18 @@ public class MoneyBehaviour : MonoBehaviour
     #region PRIVATE_METHODS
     private IEnumerator Resume_Collisions()
     {
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(0.5f);
         m_collider.enabled = true;
         yield break;
     }
 
     private IEnumerator De_Spawn()
     {
+        //Give time to the particle system
+        m_renderer.enabled = false;
+        m_collider.enabled = false;
+        yield return new WaitForSeconds(1f);
+
         transform.position = Vector3.down * 10f;
         yield return new WaitForEndOfFrame();
         Destroy(this);
@@ -66,5 +72,7 @@ public class MoneyBehaviour : MonoBehaviour
     //Serialized variables
     [SerializeField] Rigidbody m_rigidbody;
     [SerializeField] Collider m_collider;
+    [SerializeField] ParticleSystem m_collectParticles;
+    [SerializeField] MeshRenderer m_renderer;
     #endregion //VARIABLES
 }

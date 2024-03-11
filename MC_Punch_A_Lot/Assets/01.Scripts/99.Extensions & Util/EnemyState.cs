@@ -6,5 +6,6 @@ public enum EnemyState
 {
     INACTIVE = -1,
     ALIVE = 1,
-    DEAD = 2
+    PUNCHED = 2,
+    DEAD = 3
 }

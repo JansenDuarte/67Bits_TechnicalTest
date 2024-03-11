@@ -22,12 +22,24 @@ public class EnemyControler : MonoBehaviour
 
     private void Update()
     {
-        if (State == EnemyState.ALIVE && agent.enabled)
+        if (m_currentState == EnemyState.ALIVE && agent.enabled)
         {
             if (agent.remainingDistance < m_allowedRemainingDistance)
                 agent.SetDestination(Vector3Extention.RandomVec3(m_maxTravelDistance, true, Axis.Y));
         }
-        else if (State == EnemyState.DEAD)
+        else if(m_currentState == EnemyState.PUNCHED)
+        {
+            //test collision like this, because the NavMeshAgent overrides the internal collisions
+            if (Physics.Raycast(masterBone.transform.position, Vector3.down, out RaycastHit hit, 0.5f))
+            {
+                if (hit.transform.CompareTag(Tags.GROUND))
+                {
+                    interactionTrigger.enabled = true;
+                    m_currentState = EnemyState.DEAD;
+                }
+            }
+        }
+        else if (m_currentState == EnemyState.DEAD)
         {
             //DEBUG this line is helpful in the editor
             Debug.DrawLine(masterBone.transform.position, masterBone.transform.position + Vector3.down, Color.blue);
@@ -41,7 +53,7 @@ public class EnemyControler : MonoBehaviour
                 {
                     GameObject go = Instantiate(
                         moneyPrefab,
-                        Vector3Extention.AddScalar_OnAxis(hit.transform.position, 1f, Axis.Y),
+                        Vector3Extention.AddScalar_OnAxis(hit.transform.position, 3f, Axis.Y),
                         Quaternion.identity);
                     go.GetComponent<MoneyBehaviour>().Spawn(transform.position);
                     StartCoroutine(Wait_For_Respawn());
@@ -58,17 +70,10 @@ public class EnemyControler : MonoBehaviour
         transform.position = Vector3Extention.RandomVec3(m_maxTravelDistance, true, Axis.Y);
         agent.enabled = true;
         enemyAnimator.enabled = true;
+        enemyAnimator.SetFloat("Speed", 1f);
         Set_Radgoll_State(false);
         m_currentState = EnemyState.ALIVE;
         agent.SetDestination(Vector3Extention.RandomVec3(m_maxTravelDistance, true, Axis.Y));
-    }
-
-    private IEnumerator Switch_State(EnemyState _nextState)
-    {
-        //Generaly used to let the physics calculations cool down on the limbs
-        yield return new WaitForSeconds(1.5f);
-
-        m_currentState = _nextState;
     }
 
     private void Set_Radgoll_State(bool _state) { masterBone.isKinematic = !_state; }
@@ -90,13 +95,14 @@ public class EnemyControler : MonoBehaviour
     #region PUBLIC_METHODS
     public void Get_Punched(Vector3 _direction)
     {
+        GameManager.Instance.Play_HurtSFX();
         agent.enabled = false;
         enemyAnimator.enabled = false;
         Set_Radgoll_State(true);
         Debug.DrawLine(masterBone.position, masterBone.position + _direction, Color.red, 10f);
         _direction.y = 1f;
         masterBone.AddForce(_direction * m_punchForce, ForceMode.Impulse);
-        StartCoroutine(Switch_State(EnemyState.DEAD));
+        m_currentState = EnemyState.PUNCHED;
     }
 
     public void Get_Thrown(Vector3 _velocity)

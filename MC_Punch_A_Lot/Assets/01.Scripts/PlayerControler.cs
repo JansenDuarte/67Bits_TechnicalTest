@@ -240,6 +240,7 @@ public class PlayerControler : MonoBehaviour
                 m_currentPileSize--;
             }
         }
+        m_generalHud.Update_PileSize(m_currentPileSize, m_pileLimit);
     }
 
     private IEnumerator Throw_Bodies(Vector3 _boxPosition)
@@ -279,6 +280,7 @@ public class PlayerControler : MonoBehaviour
                 PileUp_Enemies(ec);
             if (ec.State == EnemyState.ALIVE)
             {
+                GameManager.Instance.Play_PunchSFX();
                 playerAnimator.SetTrigger("Punch");
                 ec.Get_Punched(Vector3.Normalize(ec.transform.position - transform.position));
             }
@@ -291,6 +293,7 @@ public class PlayerControler : MonoBehaviour
         {
             m_money += (int)_other.GetComponentInParent<MoneyBehaviour>().Collect();
             m_generalHud.Update_Money(m_money);
+            GameManager.Instance.Play_MoneySFX();
         }
 
         if (_other.CompareTag(Tags.LEVELUP))
