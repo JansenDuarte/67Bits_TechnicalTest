@@ -278,7 +278,10 @@ public class PlayerControler : MonoBehaviour
             if (ec.State == EnemyState.DEAD)
                 PileUp_Enemies(ec);
             if (ec.State == EnemyState.ALIVE)
+            {
+                playerAnimator.SetTrigger("Punch");
                 ec.Get_Punched(Vector3.Normalize(ec.transform.position - transform.position));
+            }
         }
 
         if (_other.CompareTag(Tags.DROP_BOX))
