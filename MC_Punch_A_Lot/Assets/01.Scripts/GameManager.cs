@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    #region Simple Singleton
+    #region SIMPLE_SINGLETON
     public static GameManager Instance;
     private void Awake()
     {

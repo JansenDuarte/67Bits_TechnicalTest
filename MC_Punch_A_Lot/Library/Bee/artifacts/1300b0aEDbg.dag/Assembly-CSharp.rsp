@@ -121,6 +121,7 @@
 -define:ENABLE_TERRAIN
 -define:ENABLE_TILEMAP
 -define:ENABLE_TIMELINE
+-define:ENABLE_INPUT_SYSTEM
 -define:ENABLE_LEGACY_INPUT_MANAGER
 -define:TEXTCORE_FONT_ENGINE_1_5_OR_NEWER
 -define:CSHARP_7_OR_LATER
@@ -343,6 +344,8 @@
 -r:"Library/Bee/artifacts/1300b0aEDbg.dag/Unity.AI.Navigation.ref.dll"
 -r:"Library/Bee/artifacts/1300b0aEDbg.dag/Unity.AI.Navigation.Updater.ref.dll"
 -r:"Library/Bee/artifacts/1300b0aEDbg.dag/Unity.EditorCoroutines.Editor.ref.dll"
+-r:"Library/Bee/artifacts/1300b0aEDbg.dag/Unity.InputSystem.ForUI.ref.dll"
+-r:"Library/Bee/artifacts/1300b0aEDbg.dag/Unity.InputSystem.ref.dll"
 -r:"Library/Bee/artifacts/1300b0aEDbg.dag/Unity.Performance.Profile-Analyzer.Editor.ref.dll"
 -r:"Library/Bee/artifacts/1300b0aEDbg.dag/Unity.PlasticSCM.Editor.ref.dll"
 -r:"Library/Bee/artifacts/1300b0aEDbg.dag/Unity.Rider.Editor.ref.dll"
@@ -372,6 +375,7 @@
 "Assets/01.Scripts/99.Extensions & Util/Vector3Extention.cs"
 "Assets/01.Scripts/EnemyControler.cs"
 "Assets/01.Scripts/GameManager.cs"
+"Assets/01.Scripts/MobiileJoystick.cs"
 "Assets/01.Scripts/MoneyBehaviour.cs"
 "Assets/01.Scripts/PlayerControler.cs"
 -langversion:9.0

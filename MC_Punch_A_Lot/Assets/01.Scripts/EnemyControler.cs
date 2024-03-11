@@ -3,63 +3,37 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
+
+
+
+[DisallowMultipleComponent]
 public class EnemyControler : MonoBehaviour
 {
-    [Header("Enemy Metrics")]
-    [SerializeField][Range(1f, 100f)] float m_maxTravelDistance;
-    [SerializeField][Range(1f, 5f)] float m_allowedRemainingDistance;
-    [SerializeField] float m_punchForce;
-    [SerializeField] NavMeshAgent agent;
-    [SerializeField] Animator enemyAnimator;
-
-    [Header("Colliders")]
-    [SerializeField] Collider interactionTrigger;
-
-    [Header("Ragdoll References")]
-    [SerializeField] Transform hipTransform;
-    [SerializeField] Rigidbody masterBone;
-    [SerializeField] Rigidbody[] bodyBones;
-
-    [Header("Money Spawn Reference")]
-    [SerializeField] GameObject moneyPrefab;
+    /*      EnemyControler        */
+    /*
+            Created by Jansen Duarte    
+    
+            Controls ragdoll state, navigation and spawning of money.
+    */
 
 
-
-    EnemyState m_currentState;
-    /// <summary>
-    /// Enemy's behaviour state
-    /// </summary>
-    public EnemyState State { get { return m_currentState; } }
-
-
-    private void Awake()
-    {
-        //DEBUG later, change this so the enemy is only alive after being spawned
-        m_currentState = EnemyState.ALIVE;
-    }
-
-    private void Start()
-    {
-        //DEBUG
-        Get_Spawned();
-    }
+    private void Start() { Get_Spawned(); }
 
 
     private void Update()
     {
-
         if (State == EnemyState.ALIVE && agent.enabled)
         {
             if (agent.remainingDistance < m_allowedRemainingDistance)
-            {
                 agent.SetDestination(Vector3Extention.RandomVec3(m_maxTravelDistance, true, Axis.Y));
-            }
         }
         else if (State == EnemyState.DEAD)
         {
-            RaycastHit hit;
+            //DEBUG this line is helpful in the editor
             Debug.DrawLine(masterBone.transform.position, masterBone.transform.position + Vector3.down, Color.blue);
-            if (Physics.Raycast(masterBone.transform.position, Vector3.down, out hit, 0.5f))
+
+            //test collision like this, because the NavMeshAgent overrides the internal collisions
+            if (Physics.Raycast(masterBone.transform.position, Vector3.down, out RaycastHit hit, 0.5f))
             {
                 if (hit.transform.CompareTag(Tags.GROUND))
                     interactionTrigger.enabled = true;
@@ -76,7 +50,9 @@ public class EnemyControler : MonoBehaviour
         }
     }
 
-    public void Get_Spawned()
+
+    #region PRIVATE_METHODS
+    private void Get_Spawned()
     {
         interactionTrigger.enabled = true;
         transform.position = Vector3Extention.RandomVec3(m_maxTravelDistance, true, Axis.Y);
@@ -87,6 +63,31 @@ public class EnemyControler : MonoBehaviour
         agent.SetDestination(Vector3Extention.RandomVec3(m_maxTravelDistance, true, Axis.Y));
     }
 
+    private IEnumerator Switch_State(EnemyState _nextState)
+    {
+        //Generaly used to let the physics calculations cool down on the limbs
+        yield return new WaitForSeconds(1.5f);
+
+        m_currentState = _nextState;
+    }
+
+    private void Set_Radgoll_State(bool _state) { masterBone.isKinematic = !_state; }
+
+    private void ShutDown_Interation() { interactionTrigger.enabled = false; }
+
+    private IEnumerator Wait_For_Respawn()
+    {
+        Set_Radgoll_State(false);
+        transform.position = Vector3.down * 10f;
+
+        yield return new WaitForSeconds(1f);
+
+        Get_Spawned();
+    }
+    #endregion //PRIVATE_METHODS
+
+
+    #region PUBLIC_METHODS
     public void Get_Punched(Vector3 _direction)
     {
         agent.enabled = false;
@@ -106,48 +107,56 @@ public class EnemyControler : MonoBehaviour
         transform.SetParent(null);
     }
 
-    IEnumerator Switch_State(EnemyState _nextState)
+    public void Fall()
     {
-        //Generaly used to let the physics calculations cool down on the limbs
-        yield return new WaitForSeconds(1.5f);
-
-        m_currentState = _nextState;
+        Set_Radgoll_State(true);
+        transform.SetParent(null);
     }
 
-    public void Get_Collected()
-    {
-        Set_Radgoll_State(false);
-        masterBone.transform.localPosition = Vector3.zero;
-        transform.rotation = Quaternion.identity;
-    }
-
-    private void Set_Radgoll_State(bool _state)
-    {
-        //if true:  kinematic off; gravity on
-        //else:     kinematic on; gravity off
-        masterBone.isKinematic = !_state;
-        for (int i = 0; i < bodyBones.Length; i++)
-        {
-            bodyBones[i].useGravity = _state;
-            bodyBones[i].isKinematic = !_state;
-        }
-    }
-
-    private void ShutDown_Interation() { interactionTrigger.enabled = false; }
+    public void Get_Collected() { Set_Radgoll_State(false); }
 
     public void Place_On_Pile(Vector3 _pos)
     {
         transform.position = _pos;
+        masterBone.transform.localPosition = Vector3.zero;
+        transform.rotation = Quaternion.identity;
         ShutDown_Interation();
     }
+    #endregion //PUBLIC_METHODS
 
-    IEnumerator Wait_For_Respawn()
-    {
-        Set_Radgoll_State(false);
-        transform.position = Vector3.down * 10f;
 
-        yield return new WaitForSeconds(1f);
 
-        Get_Spawned();
-    }
+
+
+
+    #region VARIABLES
+    #region SERIALIZED_MEMBERS
+    [Header("Enemy Metrics")]
+    [SerializeField][Range(1f, 100f)] float m_maxTravelDistance;
+    [SerializeField][Range(1f, 5f)] float m_allowedRemainingDistance;
+    [SerializeField] float m_punchForce;
+    [SerializeField] NavMeshAgent agent;
+    [SerializeField] Animator enemyAnimator;
+
+    [Header("Colliders")]
+    [SerializeField] Collider interactionTrigger;
+
+    [Header("Ragdoll References")]
+    [SerializeField] Transform hipTransform;
+    [SerializeField] Rigidbody masterBone;
+    [SerializeField] Rigidbody[] bodyBones;
+
+    [Header("Money Spawn Reference")]
+    [SerializeField] GameObject moneyPrefab;
+    #endregion //SERIALIZED_MEMBERS
+
+
+    #region PROPERTIES
+    EnemyState m_currentState = EnemyState.ALIVE;
+    /// <summary>
+    /// Enemy's behaviour state
+    /// </summary>
+    public EnemyState State { get { return m_currentState; } }
+    #endregion //PROPERTIES
+    #endregion //VARIABLES
 }

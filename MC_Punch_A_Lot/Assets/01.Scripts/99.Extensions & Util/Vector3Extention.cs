@@ -47,14 +47,14 @@ public static class Vector3Extention
     //DEBUG used for a few tests
     public static Vector3 AddScalar(Vector3 _v, float _scalar)
     {
-        Vector3 retVal = new Vector3(_v.x + _scalar, _v.y + _scalar, _v.z + _scalar);
+        Vector3 retVal = new(_v.x + _scalar, _v.y + _scalar, _v.z + _scalar);
 
         return retVal;
     }
 
     public static Vector3 AddScalar_OnAxis(Vector3 _v, float _scalar, Axis _axis)
     {
-        Vector3 retVal = new Vector3(_v.x, _v.y, _v.z);
+        Vector3 retVal = new(_v.x, _v.y, _v.z);
         switch (_axis)
         {
             case Axis.X:
