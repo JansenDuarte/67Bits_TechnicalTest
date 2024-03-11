@@ -23,8 +23,7 @@ public class PlayerHUD : MonoBehaviour
     #region PUBLIC_METHODS
     public void Show_LevelUp_Indicator(float _timer)
     {
-        if (co_levelUpIndicator == null)
-            co_levelUpIndicator = StartCoroutine(LevelUp_Indicator(_timer));
+        co_levelUpIndicator = StartCoroutine(LevelUp_Indicator(_timer));
     }
 
 
@@ -35,7 +34,7 @@ public class PlayerHUD : MonoBehaviour
     {
         m_levelUpParent.gameObject.SetActive(true);
         float aux = 0f;
-        while (aux <= _timer)
+        while (aux < _timer)
         {
             m_levelUpIndicator.fillAmount = aux / _timer;
             yield return new WaitForEndOfFrame();

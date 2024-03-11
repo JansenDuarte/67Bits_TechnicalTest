@@ -30,7 +30,7 @@ public class EnemyControler : MonoBehaviour
         else if(m_currentState == EnemyState.PUNCHED)
         {
             //test collision like this, because the NavMeshAgent overrides the internal collisions
-            if (Physics.Raycast(masterBone.transform.position, Vector3.down, out RaycastHit hit, 0.5f))
+            if (Physics.Raycast(masterBone.transform.position, Vector3.down, out RaycastHit hit, RAY_LENGTH))
             {
                 if (hit.transform.CompareTag(Tags.GROUND))
                 {
@@ -45,7 +45,7 @@ public class EnemyControler : MonoBehaviour
             Debug.DrawLine(masterBone.transform.position, masterBone.transform.position + Vector3.down, Color.blue);
 
             //test collision like this, because the NavMeshAgent overrides the internal collisions
-            if (Physics.Raycast(masterBone.transform.position, Vector3.down, out RaycastHit hit, 0.5f))
+            if (Physics.Raycast(masterBone.transform.position, Vector3.down, out RaycastHit hit, RAY_LENGTH))
             {
                 if (hit.transform.CompareTag(Tags.GROUND))
                     interactionTrigger.enabled = true;
@@ -164,5 +164,10 @@ public class EnemyControler : MonoBehaviour
     /// </summary>
     public EnemyState State { get { return m_currentState; } }
     #endregion //PROPERTIES
+
+    #region CONSTANTS
+    private const float RAY_LENGTH = 1f;
+    #endregion //CONSTANTS
+
     #endregion //VARIABLES
 }
