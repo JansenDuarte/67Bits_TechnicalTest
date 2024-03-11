@@ -120,7 +120,8 @@ public class PlayerControler : MonoBehaviour
         //TODO make the UI call
         while (m_money >= m_level * 10)
         {
-            yield return new WaitForSeconds(1f);
+            m_playerHud.Show_LevelUp_Indicator(m_levelUpTimer);
+            yield return new WaitForSeconds(m_levelUpTimer);
             Level_Up();
         }
     }
@@ -140,6 +141,9 @@ public class PlayerControler : MonoBehaviour
         }
         Color newColor = Color.HSVToRGB(m_level / 10f % 1f, 1f, 1f);
         m_renderer.material.color = newColor;
+
+        m_generalHud.Update_Level(m_level);
+        m_generalHud.Update_Money(m_money);
     }
     #endregion //LEVELUP_MANAGEMENT
 
@@ -162,6 +166,7 @@ public class PlayerControler : MonoBehaviour
 
         m_pileItems.Add(_enemy);
         m_currentPileSize++;
+        m_generalHud.Update_PileSize(m_currentPileSize, m_pileLimit);
     }
 
     private IEnumerator Pile_Sway()
@@ -188,11 +193,10 @@ public class PlayerControler : MonoBehaviour
     {
         for (int i = 0; i < m_pilePositions.Count; i++)
         {
-            m_pilePositions[i] = (pileBase.localPosition - m_playerMovement) * (i / m_pileLinearVariation);
-            Vector3 v = m_pilePositions[i];
-            v.y = i / m_pileHightVariation;
-            v.x = 0f;   //the x sway creates a weird artifact
-            m_pilePositions[i] = v;
+            Vector3 pos = m_pilePositions[i];
+            pos.y = i / m_pileHightVariation;
+            pos.z = -m_playerMovement.sqrMagnitude * (i / m_pileLinearVariation);
+            m_pilePositions[i] = pos;
         }
     }
 
@@ -201,10 +205,9 @@ public class PlayerControler : MonoBehaviour
         for (int i = 0; i < m_pileRotations.Count; i++)
         {
             //This makes a cool pile, but it's not perfect
-            Vector3 v = m_pileRotations[i];
-            v.y = m_playerMovement.x * m_pileAngularVariation * i;
-            v.x = -(m_playerMovement.z * m_pileAngularVariation * i);  //if I flip the sign, it looks like a liquid
-            m_pileRotations[i] = v;
+            Vector3 rot = m_pileRotations[i];
+            rot.x = -(m_playerMovement.sqrMagnitude * m_pileAngularVariation * i);  //if I flip the sign, it looks like a liquid
+            m_pileRotations[i] = rot;
         }
     }
 
@@ -254,6 +257,7 @@ public class PlayerControler : MonoBehaviour
             ec.Get_Thrown(velocity);
             m_pileItems.Remove(ec);
             m_currentPileSize--;
+            m_generalHud.Update_PileSize(m_currentPileSize, m_pileLimit);
 
             yield return new WaitForSeconds(m_throwDelay);
         }
@@ -281,7 +285,10 @@ public class PlayerControler : MonoBehaviour
             co_throw = StartCoroutine(Throw_Bodies(_other.transform.position));
 
         if (_other.CompareTag(Tags.MONEY))
+        {
             m_money += (int)_other.GetComponentInParent<MoneyBehaviour>().Collect();
+            m_generalHud.Update_Money(m_money);
+        }
 
         if (_other.CompareTag(Tags.LEVELUP))
         {
@@ -329,6 +336,7 @@ public class PlayerControler : MonoBehaviour
     [SerializeField] float m_throwDelay;
     [SerializeField] int m_money = 0;
     [SerializeField] int m_level = 1;
+    [SerializeField] float m_levelUpTimer = 1f;
 
 
 
@@ -339,6 +347,8 @@ public class PlayerControler : MonoBehaviour
     [SerializeField] Transform pileBase;
     [SerializeField] SkinnedMeshRenderer m_renderer;
     [SerializeField] MobiileJoystick m_joystick;
+    [SerializeField] PlayerHUD m_playerHud;
+    [SerializeField] GeneralHUD m_generalHud;
     #endregion //SERIALIZED_MEMBERS
 
 
